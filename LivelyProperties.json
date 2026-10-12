@@ -1,0 +1,67 @@
+{
+  "fishCount": {
+    "type": "slider",
+    "value": 60,
+    "min": 5,
+    "max": 100,
+    "step": 1,
+    "text": "Number of Koi"
+  },
+  "fishSize": {
+    "type": "slider",
+    "value": 0.36,
+    "min": 0.2,
+    "max": 3,
+    "step": 0.01,
+    "text": "Fish Size Multiplier"
+  },
+  "fishSpeed": {
+    "type": "slider",
+    "value": 0.8,
+    "min": 0.5,
+    "max": 3,
+    "step": 0.1,
+    "text": "Fish Speed Multiplier"
+  },
+  "waterHue": {
+    "type": "slider",
+    "value": 157,
+    "min": 0,
+    "max": 360,
+    "step": 1,
+    "text": "Water Color Hue"
+  },
+  "rippleStrength": {
+    "type": "slider",
+    "value": 1,
+    "min": 0.1,
+    "max": 5,
+    "step": 0.1,
+    "text": "Ripple Strength"
+  },
+  "fishTheme": {
+    "type": "dropdown",
+    "value": 0,
+    "text": "Fish Color Theme",
+    "items": [
+      "Traditional",
+      "Neon",
+      "Monochrome"
+    ]
+  },
+  "enableCaustics": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Enable Light Caustics"
+  },
+  "enableFeeding": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Enable Feeding on Click"
+  },
+  "shyFish": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Fish Avoid Cursor (Shy)"
+  }
+}

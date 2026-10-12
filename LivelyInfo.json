@@ -1,9 +1,9 @@
 {
   "AppVersion": "1.0.0.0",
-  "Title": "Lotus Pond - Natural Edition",
+  "Title": "Lotus Pond - Growing Koi",
   "Thumbnail": "LivelyThumbnail.jpg",
   "Preview": null,
-  "Desc": "Layered lotus clusters, quiet jade water and independent koi with changing depth. Offline Canvas 2D adaptation of Interactive Koi Pond.",
+  "Desc": "A quiet lotus pond with koi that grow when fed. Individual growth is saved locally. Offline Canvas 2D.",
   "Author": "KR0817; based on Interactive Koi Pond by Rezaye Rabbi (RzX)",
   "License": "MIT",
   "Contact": "https://github.com/KR0817/lotus-pond-wallpaper",

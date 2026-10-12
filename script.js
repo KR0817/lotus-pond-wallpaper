@@ -17,6 +17,28 @@ const FOOD_DETECT_RADIUS_SQ = 90000;
 const EAT_RADIUS_SQ = 400;
 const FEAR_RADIUS_SQ = 40000;
 
+const GROWTH_KEY = 'lotus-pond-growth-v1';
+const MAX_GROWTH = 1.75;
+function loadMeals() {
+    try {
+        const saved=JSON.parse(localStorage.getItem(GROWTH_KEY));
+        if(saved?.version===1 && Array.isArray(saved.meals)) {
+            return saved.meals.slice(0,100).map(n=>Number.isFinite(n)?Math.max(0,Math.min(100,Math.floor(n))):0);
+        }
+    } catch (_) { /* Storage can be disabled by the wallpaper host. */ }
+    return [];
+}
+const pondMeals=loadMeals();
+
+function saveMeals() {
+    try { localStorage.setItem(GROWTH_KEY,JSON.stringify({version:1,meals:pondMeals})); }
+    catch (_) { /* Keep session growth when persistent storage is unavailable. */ }
+}
+
+function growthFromMeals(meals) {
+    return 1+(MAX_GROWTH-1)*(1-Math.pow(.88,meals));
+}
+
 let width, height;
 function resize() {
     const previousWidth = width, previousHeight = height;
@@ -153,12 +175,16 @@ class Food {
 }
 
 class Koi {
-    constructor() {
+    constructor(slot=kois.length) {
+        this.slot=slot;
+        this.meals=pondMeals[slot]||0;
+        this.growthTarget=growthFromMeals(this.meals);
+        this.growth=this.growthTarget;
         this.x = Math.random() * width;
         this.y = Math.random() * height;
         this.vx = (Math.random() - 0.5) * 1;
         this.vy = (Math.random() - 0.5) * 1;
-        this.baseSpeed = 0.4 + Math.random() * 0.4;
+        this.baseSpeed = (0.4 + Math.random() * 0.4);
         
         this.updateColorTheme();
         this.primary = Math.random() < .25;
@@ -201,8 +227,21 @@ class Koi {
         }));
     }
 
+    eat() {
+        this.meals=Math.min(100,this.meals+1);
+        this.growthTarget=growthFromMeals(this.meals);
+        pondMeals[this.slot]=this.meals;
+        saveMeals();
+        this.fedTimer=180;
+    }
+
+    visualScale() {
+        return config.fishSize*this.bodyScale*this.growth;
+    }
+
     update(dt) {
         if (dt <= 0) return;
+        this.growth+=(this.growthTarget-this.growth)*(1-Math.exp(-dt/2));
         this.motionTime += dt;
         this.fedTimer = Math.max(0, this.fedTimer - dt * 60);
         this.stateTime -= dt;
@@ -217,6 +256,7 @@ class Koi {
         const stroke = .5 + .5 * Math.sin(this.motionTime * 1.25 + this.rhythm);
         let target = null, nearest = Infinity;
         for (const food of foods) {
+            if(food.life<=0)continue;
             const d = distanceSq(this, food);
             if (d < nearest) { nearest = d; target = food; }
         }
@@ -237,10 +277,10 @@ class Koi {
             desiredAngle = Math.atan2(target.y - this.y, target.x - this.x);
             desiredSpeed = cruise * (.38 + 1.12 * Math.min(1, Math.sqrt(nearest) / 160));
             active = true;
-            if (nearest < EAT_RADIUS_SQ) {
+            if (nearest < EAT_RADIUS_SQ*Math.max(.65,Math.min(1.6,this.visualScale()))) {
                 foods.splice(foods.indexOf(target), 1);
                 ripples.push(new Ripple(this.x, this.y, .8 * config.rippleStrength));
-                this.fedTimer = 180;
+                this.eat();
             }
         } else if (this.fedTimer <= 0 && config.shyFish && mouse.active && distanceSq(this, mouse) < FEAR_RADIUS_SQ) {
             desiredAngle = Math.atan2(this.y - mouse.y, this.x - mouse.x);
@@ -248,7 +288,7 @@ class Koi {
             active = true;
         }
         let sx=0,sy=0,cx=0,cy=0,hx=0,hy=0,neighbors=0;
-        const spacing=Math.max(18,config.fishSize*this.bodyScale*88);
+        const spacing=Math.max(18,this.visualScale()*88);
         let ahead=0;
         for(const other of kois) {
             if(other===this)continue;
@@ -314,11 +354,11 @@ class Koi {
     bodyBend(x) {
         const t = Math.max(0, Math.min(1.2, (8 - x) / 74));
         const wave = Math.sin(this.swimCycle - t * 3.8) * t * t * (.5 + 6 * this.tailEffort);
-        return wave + this.turnRate * t * t * 10;
+        return (wave + this.turnRate * t * t * 10);
     }
 
     draw(ctx) {
-        const size = config.fishSize * this.bodyScale * (1-this.waterDepth*.12);
+        const size = this.visualScale() * (1-this.waterDepth*.12);
         const phase = this.swimCycle;
         const bend = x => this.bodyBend(x);
         // A shared deforming centerline keeps outline, markings and fins attached during turns.
